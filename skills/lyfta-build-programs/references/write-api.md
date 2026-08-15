@@ -73,6 +73,23 @@ The spelling `excercise_name` is intentional. If the API does not provide an una
 
 Optional exercise fields include `exercise_note`, `exercise_rest_time`, `exercise_superset_id`, `is_rep_range_active`, and `sets`.
 
+### Rest intervals
+
+`exercise_rest_time` is an integer number of seconds, not minutes. Convert a user-provided value exactly once before building the payload:
+
+| Requested rest | API value |
+| --- | ---: |
+| 30 seconds | `30` |
+| 1 minute | `60` |
+| 2 minutes | `120` |
+| 3 minutes | `180` |
+| 5 minutes | `300` |
+| 10 minutes | `600` |
+
+Keep rest separate from the set-level `duration` field, which represents exercise work time. Before a write, summarize both representations, such as `2 min (120 seconds)`, and scan every exercise. If the user says “2 minutes for all,” every `exercise_rest_time` must equal `120`.
+
+The bundled client rejects values above 300 seconds by default because an accidental `600` produces a 10-minute rest. Use `--allow-long-rest` only after the user explicitly requests more than 5 minutes.
+
 Set fields:
 
 - `set_type_id`: integer, default 0.
