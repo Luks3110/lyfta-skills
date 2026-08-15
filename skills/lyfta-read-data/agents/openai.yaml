@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lyfta Read Data"
+  short_description: "Read and analyze Lyfta workout data"
+  default_prompt: "Use $lyfta-read-data to fetch and analyze my recent Lyfta workouts."
