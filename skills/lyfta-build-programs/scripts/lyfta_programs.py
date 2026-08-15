@@ -19,6 +19,7 @@ from urllib.request import Request, urlopen
 
 BASE_URL = "https://my.lyfta.app"
 USER_AGENT = "lyfta-build-programs-skill/1.0"
+MAX_STANDARD_REST_SECONDS = 300
 SET_STRING_FIELDS = {
     "reps",
     "from_reps",
@@ -210,7 +211,7 @@ def normalize_set(raw: Any, label: str) -> dict[str, Any]:
     return item
 
 
-def normalize_exercise(raw: Any, index: int) -> dict[str, Any]:
+def normalize_exercise(raw: Any, index: int, allow_long_rest: bool = False) -> dict[str, Any]:
     label = f"workout.exercises[{index}]"
     exercise = copy.deepcopy(require_object(raw, label))
     allowed = {
@@ -235,6 +236,17 @@ def normalize_exercise(raw: Any, index: int) -> dict[str, Any]:
     for field in ("exercise_rest_time", "exercise_superset_id"):
         if field in exercise:
             exercise[field] = integer(exercise[field], f"{label}.{field}")
+    rest_seconds = exercise.get("exercise_rest_time")
+    if (
+        rest_seconds is not None
+        and rest_seconds > MAX_STANDARD_REST_SECONDS
+        and not allow_long_rest
+    ):
+        raise LyftaError(
+            f"{label}.exercise_rest_time is {rest_seconds} seconds "
+            f"({rest_seconds / 60:g} minutes), above the {MAX_STANDARD_REST_SECONDS}-second "
+            "safety limit; use --allow-long-rest only after explicit user confirmation"
+        )
     if "is_rep_range_active" in exercise and not isinstance(
         exercise["is_rep_range_active"], bool
     ):
@@ -256,7 +268,7 @@ def normalize_exercise(raw: Any, index: int) -> dict[str, Any]:
     return exercise
 
 
-def validate_template(raw: Any) -> dict[str, Any]:
+def validate_template(raw: Any, allow_long_rest: bool = False) -> dict[str, Any]:
     payload = copy.deepcopy(require_object(raw, "payload"))
     if "client_id" in payload or "clientId" in payload:
         raise LyftaError("Coach/client operations are outside this skill")
@@ -284,7 +296,9 @@ def validate_template(raw: Any) -> dict[str, Any]:
     exercises = workout.get("exercises", [])
     if not isinstance(exercises, list):
         raise LyftaError("workout.exercises must be an array")
-    workout["exercises"] = [normalize_exercise(item, i) for i, item in enumerate(exercises)]
+    workout["exercises"] = [
+        normalize_exercise(item, i, allow_long_rest) for i, item in enumerate(exercises)
+    ]
     return payload
 
 
@@ -316,6 +330,12 @@ def build_parser() -> argparse.ArgumentParser:
             action="store_true",
             help="Perform the live write; omit for a dry run",
         )
+        if name == "create-template":
+            command.add_argument(
+                "--allow-long-rest",
+                action="store_true",
+                help="Allow exercise rest above 300 seconds after explicit user confirmation",
+            )
     return parser
 
 
@@ -336,7 +356,7 @@ def run(args: argparse.Namespace) -> Any:
         payload = validate_collection(raw)
         endpoint = "/api/v1/collections"
     else:
-        payload = validate_template(raw)
+        payload = validate_template(raw, args.allow_long_rest)
         endpoint = "/api/v1/templates"
 
     if not args.execute:
