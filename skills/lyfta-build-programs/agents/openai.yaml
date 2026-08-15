@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lyfta Build Programs"
+  short_description: "Create Lyfta programs and workout templates"
+  default_prompt: "Use $lyfta-build-programs to prepare a Lyfta training program and show me the payload before creating it."
