@@ -1,5 +1,7 @@
 # Lyfta Skills
 
+[![skills.sh](https://skills.sh/b/Luks3110/lyfta-skills)](https://skills.sh/Luks3110/lyfta-skills)
+
 Agent skills for working with a user's own account through the Lyfta Developer API.
 
 ## Included skills
@@ -9,19 +11,30 @@ Agent skills for working with a user's own account through the Lyfta Developer A
 
 Coach and client operations are intentionally out of scope.
 
+Browse the skills on skills.sh:
+
+- [lyfta-read-data](https://skills.sh/Luks3110/lyfta-skills/lyfta-read-data)
+- [lyfta-build-programs](https://skills.sh/Luks3110/lyfta-skills/lyfta-build-programs)
+
 ## Install
 
 Install both skills:
 
 ```bash
-npx skills add Luks3110/lyfta-skills
+npx skills add https://github.com/Luks3110/lyfta-skills
 ```
 
 Or install one skill:
 
 ```bash
-npx skills add Luks3110/lyfta-skills --skill lyfta-read-data
-npx skills add Luks3110/lyfta-skills --skill lyfta-build-programs
+npx skills add https://github.com/Luks3110/lyfta-skills --skill lyfta-read-data
+npx skills add https://github.com/Luks3110/lyfta-skills --skill lyfta-build-programs
+```
+
+Install both non-interactively for Codex:
+
+```bash
+npx skills add https://github.com/Luks3110/lyfta-skills --agent codex --skill '*' --yes
 ```
 
 ## Authentication
